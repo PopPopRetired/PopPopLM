@@ -20,7 +20,6 @@ export const sources = sqliteTable("sources", {
   title: text("title").notNull(),
   type: text("type").notNull(), // 'url', 'text', 'pdf'
   content: text("content"),
-  fileData: blob("file_data", { mode: "buffer" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 

@@ -23,7 +23,7 @@ export async function listSourcesByNotebook(notebookId: number): Promise<SelectS
     createdAt: sources.createdAt
   }).from(sources).where(eq(sources.notebookId, notebookId));
 
-  return results.map(r => ({ ...r, fileData: null }));
+  return results;
 }
 
 export async function deleteSources(sourceIds: number[]) {

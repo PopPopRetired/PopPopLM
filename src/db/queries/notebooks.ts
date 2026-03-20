@@ -20,11 +20,7 @@ export async function listNotebooksWithSourceCount(ownerIdFilter?: number) {
     where: ownerIdFilter ? eq(notebooks.ownerId, ownerIdFilter) : undefined,
     with: {
       owner: true,
-      sources: {
-        columns: {
-          fileData: false
-        }
-      }
+      sources: true
     },
   });
   

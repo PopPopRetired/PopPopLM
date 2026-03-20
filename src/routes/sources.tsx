@@ -4,6 +4,8 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { createSource, deleteSources, listSourcesByNotebook, updateSourceTitle } from "../db/queries/sources";
 import { SourcesPanel } from "../components/SourcesPanel";
+import * as cheerio from "cheerio";
+import { PDFParse } from "pdf-parse";
 
 const sourcesRoutes = new Hono<AppEnv>();
 
@@ -29,26 +31,64 @@ sourcesRoutes.post(
     let type = body.type;
     let title = typeof body.title === "string" && body.title.trim() !== "" ? body.title : "Untitled";
     let content = "";
-    let fileData: Uint8Array | undefined = undefined;
 
     if (type === "pdf" && body.file instanceof File) {
       const arrayBuffer = await body.file.arrayBuffer();
-      fileData = new Uint8Array(arrayBuffer);
+      
+      try {
+        const parser = new PDFParse({ data: Buffer.from(arrayBuffer) });
+        const textResult = await parser.getText();
+        content = textResult.text.trim();
+      } catch (e) {
+        console.error("Failed to parse PDF", e);
+        content = "Could not extract text from PDF";
+      }
+
       if (title === "Untitled") {
         title = body.file.name;
       }
     } else if (type === "url" || type === "text") {
-      content = typeof body.content === "string" ? body.content.trim() : "";
+      const rawContent = typeof body.content === "string" ? body.content.trim() : "";
+      content = rawContent;
       
       if (type === "text" && (content.startsWith("http://") || content.startsWith("https://"))) {
         type = "url";
       }
 
+      if (type === "url") {
+        try {
+          // If the rawContent is not a full URL, we might want to ensure it has http:// or https://
+          let fetchUrl = rawContent;
+          if (!fetchUrl.startsWith("http")) {
+            fetchUrl = "https://" + fetchUrl;
+          }
+          const res = await fetch(fetchUrl);
+          if (res.ok) {
+            const html = await res.text();
+            const $ = cheerio.load(html);
+            // remove non-content elements
+            $("script, style, noscript, nav, header, footer, iframe").remove();
+            const extractedText = $("body").text().replace(/\s+/g, ' ').trim();
+            // Extract the title if not provided
+            if (title === "Untitled" || title.trim() === "") {
+              const urlTitle = $("title").text().trim();
+              if (urlTitle) {
+                title = urlTitle;
+              }
+            }
+            content = extractedText || rawContent; // store the extracted text in content
+          }
+        } catch (e) {
+          console.error("Failed to fetch/parse URL", e);
+          // Keep content as rawContent if fetch fails
+        }
+      }
+
       if (title === "Untitled" || title.trim() === "") {
         if (type === "url") {
-          title = content;
+          title = rawContent;
         } else {
-          title = content.length > 40 ? content.slice(0, 37) + "..." : (content || "Untitled Text");
+          title = rawContent.length > 40 ? rawContent.slice(0, 37) + "..." : (rawContent || "Untitled Text");
         }
       }
     }
@@ -58,7 +98,6 @@ sourcesRoutes.post(
       title,
       type,
       content,
-      fileData: fileData ? Buffer.from(fileData) : undefined,
       createdAt: new Date(),
     });
 

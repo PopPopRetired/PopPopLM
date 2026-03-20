@@ -15,6 +15,13 @@
       "when": 1773962853097,
       "tag": "0001_smooth_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774036012881,
+      "tag": "0002_keen_midnight",
+      "breakpoints": true
     }
   ]
 }
