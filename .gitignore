@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.bun-cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+# dist/
+# out/
+
+# Local runtime state
+.mastra/
+local.db
+mastra.db
+mastra.db-shm
+mastra.db-wal
+.tmp-*.sqlite
+src/mastra/public/*.db
+src/mastra/public/*.db-shm
+src/mastra/public/*.db-wal
+
+# TypeScript incremental cache
+*.tsbuildinfo
