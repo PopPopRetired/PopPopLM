@@ -33,7 +33,23 @@ description: Mastra v1.x AI agent patterns, tool/workflow construction, memory, 
 
 - Use `@mastra/hono` to mount Mastra routes onto the Hono application.
 - Do not manually define agent HTTP endpoints; use the adapter's mount pattern.
-- Confirm the exact mount API from `@Mastra Docs` — it changed between minor versions.
+
+**Correct Usage Pattern (Mastra v1.x + Hono):**
+```typescript
+import { Hono } from 'hono';
+import { MastraServer } from '@mastra/hono';
+import { mastra } from './mastra';
+import type { AppEnv } from '../../types'; // Adjust path depending on file location
+
+// Initialize Hono with the central project AppEnv
+const app = new Hono<AppEnv>();
+
+// Mount Mastra onto the Hono app
+const server = new MastraServer({ app, mastra });
+await server.init();
+
+export default app;
+```
 
 ## File Structure Convention
 

@@ -13,7 +13,7 @@ export function OwnerCarousel({ dbOwners, selectedOwnerId = null, isOob = false 
   return (
     <form 
       id="owner-carousel"
-      class="flex items-center justify-center gap-4 sm:gap-6 mb-14 w-full px-2"
+      class="flex items-center justify-center gap-3 sm:gap-4 mb-12 w-full px-4"
       {...oobAttr}
       {...{ "x-on:submit.prevent": "" }}
       x-data={`{
@@ -31,16 +31,16 @@ export function OwnerCarousel({ dbOwners, selectedOwnerId = null, isOob = false 
     >
       <input type="hidden" name="ownerId" x-bind:value="currentOwner.id || ''" />
 
-      <button type="button" {...{ "x-on:click": "prev()" }} class="btn btn-ghost btn-circle text-3xl hover:bg-gray-100 min-h-[3.25rem] w-[3.25rem] font-light">
-        <span class="iconify lucide--chevron-left" />
+      <button type="button" {...{ "x-on:click": "prev()" }} class="btn btn-circle bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-800 shadow-sm border border-slate-200 hover:border-slate-300 hover:-translate-x-0.5 transition-all">
+        <span class="iconify text-xl lucide--chevron-left" />
       </button>
       
-      <div class="border-[2px] border-black bg-white flex items-center justify-center h-14 min-w-[240px] px-6">
-        <span x-text="currentOwner.name" class="font-normal text-lg tracking-wide"></span>
+      <div class="bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center h-12 min-w-[200px] px-8 transition-all">
+        <span x-text="currentOwner.name" class="font-bold text-slate-700 tracking-wide select-none"></span>
       </div>
       
-      <button type="button" {...{ "x-on:click": "next()" }} class="btn btn-ghost btn-circle text-3xl hover:bg-gray-100 min-h-[3.25rem] w-[3.25rem] font-light">
-        <span class="iconify lucide--chevron-right" />
+      <button type="button" {...{ "x-on:click": "next()" }} class="btn btn-circle bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-800 shadow-sm border border-slate-200 hover:border-slate-300 hover:translate-x-0.5 transition-all">
+        <span class="iconify text-xl lucide--chevron-right" />
       </button>
     </form>
   );

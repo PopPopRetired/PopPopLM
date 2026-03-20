@@ -1,10 +1,11 @@
 import { Hono } from "hono";
+import type { AppEnv } from "../types";
 import { listNotebooksWithSourceCount, listOwners, createOwner, insertOwnerSchema } from "../db/queries/notebooks";
 import { HomeView } from "../views/home";
 import { OwnerCarousel } from "../components/OwnerCarousel";
 import { NotebooksGrid } from "../components/NotebooksGrid";
 
-const homeRoutes = new Hono();
+const homeRoutes = new Hono<AppEnv>();
 
 const readBodyString = (value: unknown): string => {
   return typeof value === "string" ? value : "";

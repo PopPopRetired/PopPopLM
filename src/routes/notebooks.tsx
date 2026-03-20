@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { AppEnv } from "../types";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { NotebookView, NotebookTitleInput } from "../views/notebook";
@@ -8,7 +9,7 @@ import { notebooks } from "../db/schema";
 import { listSourcesByNotebook } from "../db/queries/sources";
 import { createNotebook, updateNotebookTitle } from "../db/queries/notebooks";
 
-const notebookRoutes = new Hono();
+const notebookRoutes = new Hono<AppEnv>();
 
 notebookRoutes.post(
   "/",

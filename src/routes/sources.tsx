@@ -1,10 +1,11 @@
 import { Hono } from "hono";
+import type { AppEnv } from "../types";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { createSource, deleteSources, listSourcesByNotebook, updateSourceTitle } from "../db/queries/sources";
 import { SourcesPanel } from "../components/SourcesPanel";
 
-const sourcesRoutes = new Hono();
+const sourcesRoutes = new Hono<AppEnv>();
 
 const uploadSourceFormSchema = z.object({
   type: z.enum(["text", "url", "pdf"]).optional().default("text"),

@@ -1,32 +1,40 @@
 import { OwnerCarousel } from "../components/OwnerCarousel";
 import { NotebooksGrid } from "../components/NotebooksGrid";
-
 export function HomeView({ notebooks, dbOwners }: { notebooks: any[], dbOwners: any[] }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PopPopLM</title>
         <link rel="stylesheet" href="/public/styles.css" />
-        <script src="/node_modules/htmx.org/dist/htmx.min.js" defer />
-        <script src="/node_modules/alpinejs/dist/cdn.min.js" defer />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <script src="/node_modules/htmx.org/dist/htmx.min.js" defer></script>
+        <script src="/node_modules/alpinejs/dist/cdn.min.js" defer></script>
+        <style>
+          {`body { font-family: 'Inter', sans-serif; }`}
+        </style>
       </head>
-      <body class="min-h-screen bg-white text-black font-sans antialiased">
-        <div class="mx-auto w-full max-w-screen-2xl flex flex-col p-4 sm:p-6">
+      <body class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 antialiased selection:bg-primary selection:text-white">
+        <div class="mx-auto w-full max-w-[1600px] flex flex-col p-4 sm:p-8">
           {/* Header */}
-          <header class="flex items-center mb-8">
-            <a href="/" class="flex items-center gap-3 no-underline group hover:opacity-80 transition-opacity">
-              <img src="/public/pplmlogo.png" alt="PopPopLM Logo" class="h-10 w-auto object-contain rounded-sm" />
-              <span class="text-xl font-medium tracking-tight">PopPopLM</span>
+          <header class="flex items-center mb-10 sm:mb-16">
+            <a href="/" class="flex items-center gap-3 no-underline group">
+              <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-200 group-hover:shadow-md group-hover:border-primary/40 transition-all duration-300">
+                <img src="/public/pplmlogo.png" alt="PopPopLM Logo" class="h-8 w-auto object-contain" />
+              </div>
+              <span class="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-primary transition-colors">PopPopLM</span>
             </a>
           </header>
 
-          <main class="flex-1 w-full max-w-[1400px] mx-auto flex flex-col items-center">
+          <main class="flex-1 w-full max-w-6xl mx-auto flex flex-col items-center">
             {/* Title */}
-            <h1 class="text-[32px] md:text-[38px] font-normal tracking-tight mb-8 text-center">
-              Family Notebooks
-            </h1>
+            <div class="text-center mb-12 w-full">
+              <h1 class="text-4xl md:text-[3.5rem] font-extrabold tracking-tight text-slate-900 mb-4 drop-shadow-sm">
+                Family Notebooks
+              </h1>
+              <p class="text-slate-500 text-lg sm:text-xl font-medium">Organize and share your knowledge, securely.</p>
+            </div>
 
             {/* Filters Carousel */}
             <OwnerCarousel dbOwners={dbOwners} />
@@ -37,30 +45,32 @@ export function HomeView({ notebooks, dbOwners }: { notebooks: any[], dbOwners: 
         </div>
 
         {/* Register Modal */}
-        <dialog id="register_modal" class="modal">
-          <div class="modal-box bg-white border-[2.5px] border-black rounded-none shadow-none max-w-sm">
-            <h3 class="font-normal text-2xl mb-6 tracking-tight">Register</h3>
+        <dialog id="register_modal" class="modal modal-bottom sm:modal-middle">
+          <div class="modal-box bg-white rounded-3xl shadow-2xl border border-slate-100 sm:max-w-md p-8">
+            <h3 class="font-extrabold text-2xl text-slate-900 mb-2">Create Profile</h3>
+            <p class="text-slate-500 mb-8 font-medium">Register your name to start managing your own sources.</p>
+            
             <form
               hx-post="/fragments/owners"
               hx-target="#owner-carousel"
               hx-swap="outerHTML"
-              class="flex flex-col gap-4"
+              class="flex flex-col gap-6"
               onsubmit="document.getElementById('register_modal').close()"
             >
               <div class="form-control w-full">
-                <label class="label px-0">
-                  <span class="label-text text-black font-medium text-base">Your Name</span>
+                <label class="label px-1 pt-0 pb-2">
+                  <span class="label-text text-slate-700 font-semibold text-sm uppercase tracking-wide">Your Name</span>
                 </label>
-                <input type="text" name="name" placeholder="E.g. James" class="input input-bordered w-full rounded-none border-[2.5px] border-black focus:outline-none focus:border-black" required />
+                <input type="text" name="name" placeholder="E.g. James" class="input input-bordered w-full rounded-2xl bg-slate-50 border-slate-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-lg py-6" required />
               </div>
-              <div class="modal-action mt-4 flex gap-3">
-                <button type="button" class="btn btn-ghost rounded-none border-[2.5px] border-transparent hover:border-black hover:bg-gray-100" onclick="document.getElementById('register_modal').close()">Cancel</button>
-                <button type="submit" class="btn bg-black text-white hover:bg-gray-800 rounded-none border-[2.5px] border-black flex-1">Register</button>
+              <div class="modal-action mt-4 m-0 flex gap-3">
+                <button type="button" class="btn btn-ghost rounded-2xl hover:bg-slate-100 flex-1 font-semibold text-slate-600" onclick="document.getElementById('register_modal').close()">Cancel</button>
+                <button type="submit" class="btn btn-primary text-white rounded-2xl shadow-md border-none flex-1 font-bold text-base hover:shadow-lg hover:scale-[1.02] transition-all">Register</button>
               </div>
             </form>
           </div>
           <form method="dialog" class="modal-backdrop">
-            <button>close</button>
+            <button class="cursor-default bg-slate-900/20 backdrop-blur-sm">close</button>
           </form>
         </dialog>
 

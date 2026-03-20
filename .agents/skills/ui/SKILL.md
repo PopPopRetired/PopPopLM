@@ -55,6 +55,22 @@ To change themes, add components, or adjust icon sets, edit `src/styles.css` —
 - Ensure tap targets are usable on mobile (`btn-sm`/`btn-md` choices, adequate vertical rhythm).
 - For HTMX/Alpine examples in docs or code suggestions, include at least one mobile-safe and one desktop breakpoint pattern.
 
+## Design Aesthetic & Premium Theming
+
+**Rule:** AI Agents MUST strictly follow this premium "Apple-like" aesthetic when generating new layout views or components:
+- **Global Background:** Use `bg-gradient-to-br from-slate-50 to-slate-100` and `text-slate-800` for the app canvas.
+- **Floating Widgets:** Wrap major panels in glassmorphism containers: `bg-white/70 backdrop-blur-xl border border-white rounded-3xl shadow-lg`. **Never** use harsh solid borders like `border-[2px] border-black`.
+- **Icon Treatment:** Place icons inside soft, color-matched pastel boxes (e.g., `<div class="bg-sky-50 text-sky-500 p-2.5 rounded-xl">`) rather than leaving them floating unstyled.
+- **Interactive Accents:** Map interactive states to DaisyUI's semantic `text-primary` or `bg-primary` logic.
+- **Theme Lock:** The `<html data-theme="light">` tag is currently locked into views to ensure hardcoded Tailwind backgrounds (`slate-50`) do not clash with DaisyUI Dark Mode components.
+
+### Future Theming Pivots (Human Developer Guide)
+> **AGENT INSTRUCTION: IGNORE THIS SECTION** completely when building normal UI components. ONLY read this if the user explicitly asks you to "overhaul the entire project theme".
+
+To completely overhaul the visual identity of the app later:
+1. **Rewrite the Tailwind rules above** to define the new global aesthetic formula (canvas, widgets, icons).
+2. **Update the DaisyUI theme config** in `src/styles.css` so the semantic `primary` and `accent` button colors perfectly match your new Tailwind aesthetic.
+
 ## DaisyUI v5
 
 - Registered as `@plugin "daisyui"` in CSS — not as a Tailwind plugin in any JS config.
