@@ -245,6 +245,35 @@ Use this checklist every time you finish a milestone.
 
 ---
 
+## M5b — Source Ingestion & RAG
+
+**Status:** `[ ] PENDING`
+
+**Scope:** URL parsing, PDF processing, Youtube transcript ingestion, text chunking, and AI RAG integration.
+
+**Context to attach:**
+
+- `.agents/skills/ingestion/SKILL.md` (auto-attached via skill)
+- `src/routes/sources.tsx`
+- `src/db/queries/sources.ts`
+- `src/mastra/tools/search-sources.ts`
+
+**Tasks:**
+
+- [ ] Extract structured data/content from URLs, YouTube, and PDFs
+- [ ] Perform targeted text chunking using `@xenova/transformers`
+- [ ] Develop schema and tests using `:memory:` libSQL for the `sources` table
+- [ ] Hook up ingestion flow via relevant API routes and test their endpoints
+
+**Definition of Done:**
+
+- Sources properly ingested and stored as readable chunks.
+- Chat panel retrieves RAG content correctly to avoid omissions.
+- Ingestion data pipelines have unit tests avoiding regressions for PDFs and web fetches.
+- `bun run typecheck` exits 0.
+
+---
+
 ## M6 — Agent-UI Integration
 
 **Status:** `[ ] PENDING`
@@ -322,7 +351,7 @@ Use this checklist every time you finish a milestone.
 - [ ] Schema tests: `safeParse` valid + invalid inputs for every Zod schema
 - [ ] DB tests: CRUD operations against `:memory:` libSQL in each `src/db/queries/*.test.ts`
 - [ ] Route tests: `app.request()` for all Hono endpoints — test 200, 400, 404, 500 cases
-- [ ] Agent tool tests: verify tool Zod schemas and mock tool execution contracts
+- [ ] Agent tool tests: verify tool Zod schemas, mock tool execution contracts, and test data ingestion output formats (PDF/URL).
 - [ ] HTMX tests: assert HTML fragment structure using happy-dom for partial responses
 - [ ] Decide and implement enforcement level (pre-commit/pre-push hooks and/or CI workflow)
 - [ ] Run full suite: `bun test` from project root

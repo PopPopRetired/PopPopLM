@@ -22,6 +22,11 @@ This file is read automatically by AI coding agents. It defines the project stac
 | ORM Migrations   | drizzle-kit           | 0.31.9                                       |
 | ORM+Zod Bridge   | drizzle-zod           | 0.8.3                                        |
 | Database Client  | @libsql/client        | 0.17.0                                       |
+| AI Provider      | @ai-sdk/openai        | 3.0.47                                       |
+| AI Embeddings    | @xenova/transformers  | 2.17.2                                       |
+| Ingestion HTML   | cheerio               | 1.2.0                                        |
+| Ingestion PDF    | pdf-parse             | 2.4.5                                        |
+| Ingestion Media  | youtube-transcript    | 1.3.0                                        |
 | CSS Framework    | tailwindcss           | **4.2.1** (v4 — CSS-first, no JS config)     |
 | UI Components    | daisyui               | **5.5.19** (v5 — @plugin in CSS)             |
 | Client Behavior  | alpinejs              | **3.15.8** (directive syntax is strict)       |

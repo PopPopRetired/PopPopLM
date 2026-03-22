@@ -20,6 +20,11 @@ This project uses the following exact versions. Never suggest APIs, config patte
 | drizzle-zod          | 0.8.3   |                                                                                    |
 | @libsql/client       | 0.17.0  |                                                                                    |
 | Zod                  | 4.3.6   | **v4 — breaking changes from v3**                                                  |
+| @ai-sdk/openai       | 3.0.47  | Standard AI provider for text generation                                           |
+| @xenova/transformers | 2.17.2  | Used for chunking and processing texts for RAG embeddings                          |
+| pdf-parse            | 2.4.5   | **MUST use class-based API**: `new PDFParse({ data: buffer })`                     |
+| cheerio              | 1.2.0   | HTML extraction tool                                                               |
+| youtube-transcript   | 1.3.0   | YouTube transcript extraction via `YoutubeTranscript.fetchTranscript(url)`         |
 | alpinejs             | 3.15.8  | **v3 — use Alpine directives/magics exactly as documented**                        |
 | @types/alpinejs      | 3.13.11 | TypeScript types for Alpine usage in scripts                                       |
 | HTMX                 | 2.x     | **v2 — event/attribute syntax changed from v1**                                    |
