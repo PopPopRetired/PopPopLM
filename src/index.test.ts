@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-const { default: app } = await import("./index");
+import { app } from "./index";
 
 describe("index routes", () => {
   it("renders the scaffold page", async () => {

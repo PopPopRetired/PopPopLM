@@ -31,8 +31,6 @@ This file is read automatically by AI coding agents. It defines the project stac
 | Hypermedia       | htmx.org              | **2.x** (v2 — event syntax changed)          |
 | Route Validation | @hono/zod-validator   | 0.7.6                                        |
 | Testing          | Bun test + happy-dom  | built-in / 20.8.4                            |
-| PDF Parsing      | pdf-parse             | **2.4.5** (v2 — MUST use `new PDFParse()`)   |
-| HTML Scraping    | cheerio               | 1.2.0                                        |
 
 
 `package.json` is the absolute source of truth for versions.
@@ -79,6 +77,7 @@ These rules are auto-applied by Antigravity via the skills in `.agents/skills/`:
 | `mastra`            | `src/mastra/**` — agent/tool/workflow patterns            |
 | `database`          | `src/db/**` — schema, queries, migrations                 |
 | `ui`                | `src/views/**`, `src/components/**`, `*.css` — UI layer   |
+| `ingestion`         | `src/routes/sources.tsx`, `src/db/queries/sources.ts` — Source parsing |
 
 ### Tier 2 — Per Feature (attach manually at session start)
 
@@ -197,4 +196,3 @@ These packages have the highest risk of incorrect code generation. Always verify
 6. **Alpine.js v3** — Easy to confuse with Vue/Stimulus syntax; verify directives (`x-data`, `x-show`, `x-model`, `x-on`, `x-bind`) and magic properties before suggesting code
 7. **HTMX v2** — Event syntax changed; some attributes removed
 8. **Drizzle ORM 0.45** — Rapidly evolving; query builder API diffs from 0.3x
-9. **pdf-parse 2.4.5** — The v2 branch drops the legacy default export function (`pdf(buffer)`). You MUST use the class-based API: `import { PDFParse } from "pdf-parse"; const parser = new PDFParse({ data: buffer }); await parser.getText();`

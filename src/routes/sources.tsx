@@ -2,10 +2,12 @@ import { Hono } from "hono";
 import type { AppEnv } from "../types";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { createSource, deleteSources, listSourcesByNotebook, updateSourceTitle } from "../db/queries/sources";
+import { createSource, createSourceChunks, deleteSources, listSourcesByNotebook, updateSourceTitle } from "../db/queries/sources";
+import { chunkText, generateEmbedding } from "../lib/chunking";
 import { SourcesPanel } from "../components/SourcesPanel";
 import * as cheerio from "cheerio";
 import { PDFParse } from "pdf-parse";
+import { YoutubeTranscript } from "youtube-transcript";
 
 const sourcesRoutes = new Hono<AppEnv>();
 
@@ -62,13 +64,24 @@ sourcesRoutes.post(
           if (!fetchUrl.startsWith("http")) {
             fetchUrl = "https://" + fetchUrl;
           }
+
+          const isYouTube = fetchUrl.includes("youtube.com/watch") || fetchUrl.includes("youtu.be/");
+          let youtubeText = "";
+
+          if (isYouTube) {
+            try {
+              const transcript = await YoutubeTranscript.fetchTranscript(fetchUrl);
+              youtubeText = transcript.map((t) => t.text).join(" ");
+            } catch (e) {
+              console.error("Failed to fetch YouTube transcript", e);
+            }
+          }
+
           const res = await fetch(fetchUrl);
           if (res.ok) {
             const html = await res.text();
             const $ = cheerio.load(html);
-            // remove non-content elements
-            $("script, style, noscript, nav, header, footer, iframe").remove();
-            const extractedText = $("body").text().replace(/\s+/g, ' ').trim();
+            
             // Extract the title if not provided
             if (title === "Untitled" || title.trim() === "") {
               const urlTitle = $("title").text().trim();
@@ -76,7 +89,17 @@ sourcesRoutes.post(
                 title = urlTitle;
               }
             }
-            content = extractedText || rawContent; // store the extracted text in content
+            
+            if (isYouTube && youtubeText) {
+              content = youtubeText;
+            } else {
+              // remove non-content elements
+              $("script, style, noscript, nav, header, footer, iframe").remove();
+              const extractedText = $("body").text().replace(/\s+/g, ' ').trim();
+              content = extractedText || rawContent; // store the extracted text in content
+            }
+          } else if (isYouTube && youtubeText) {
+            content = youtubeText;
           }
         } catch (e) {
           console.error("Failed to fetch/parse URL", e);
@@ -93,13 +116,36 @@ sourcesRoutes.post(
       }
     }
 
-    await createSource({
+    const [insertedSource] = await createSource({
       notebookId,
       title,
       type,
       content,
       createdAt: new Date(),
     });
+
+    if (content && content.trim() !== "") {
+      const chunks = chunkText(content);
+      const chunksToInsert = [];
+      
+      // Process sequentially to avoid instantly overwhelming a local GPT4All instance
+      for (let i = 0; i < chunks.length; i++) {
+        const textChunk = chunks[i];
+        const embedding = await generateEmbedding(textChunk);
+        if (embedding && embedding.length > 0) {
+          chunksToInsert.push({
+            sourceId: insertedSource.id,
+            content: textChunk,
+            chunkIndex: i,
+            embedding: embedding
+          });
+        }
+      }
+      
+      if (chunksToInsert.length > 0) {
+        await createSourceChunks(chunksToInsert);
+      }
+    }
 
     const sourcesList = await listSourcesByNotebook(notebookId);
     return c.html(<SourcesPanel notebookId={notebookId} sources={sourcesList} />);

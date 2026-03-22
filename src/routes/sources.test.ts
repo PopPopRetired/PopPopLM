@@ -3,7 +3,7 @@ import { configureTestDatabase, resetNotebooksTables } from "../db/test-utils";
 
 configureTestDatabase(":memory:");
 const { db } = await import("../db/index");
-const { default: app } = await import("../index");
+import { app } from "../index";
 
 const formBody = (data: Record<string, string>): string =>
   new URLSearchParams(data).toString();

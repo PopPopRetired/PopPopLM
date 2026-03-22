@@ -28,6 +28,7 @@ export function NotebookView(props: { notebookId: number, title: string, sources
         <link rel="stylesheet" href="/public/styles.css" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <script src="/node_modules/htmx.org/dist/htmx.min.js" defer />
+        <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js" defer></script>
         <script src="/node_modules/alpinejs/dist/cdn.min.js" defer />
         <style>
           {`body { font-family: 'Inter', sans-serif; }`}
@@ -55,7 +56,7 @@ export function NotebookView(props: { notebookId: number, title: string, sources
         </header>
 
         {/* Responsive Layout with Alpine state for Mobile Tabs */}
-        <div x-data="{ activeTab: 'chat' }" class="flex-1 flex flex-col overflow-hidden relative">
+        <div x-data="{ activeTab: 'chat' }" class="flex-1 flex flex-col overflow-hidden relative min-h-0">
           
           {/* Mobile Tab Navigation */}
           <div class="md:hidden flex bg-white/90 backdrop-blur-md border-b border-slate-200 shrink-0 z-10 px-2 shadow-sm" style={{ WebkitOverflowScrolling: 'touch', overflowX: 'auto' }}>
@@ -80,20 +81,20 @@ export function NotebookView(props: { notebookId: number, title: string, sources
           </div>
 
           {/* Grid Layout Container */}
-          <main class="flex-1 p-2 md:p-6 grid grid-cols-1 md:grid-cols-[minmax(280px,1fr)_minmax(400px,2fr)_minmax(280px,1fr)] lg:grid-cols-[380px_1fr_380px] gap-2 md:gap-6 overflow-hidden h-full max-w-[1920px] mx-auto w-full z-10">
+          <main class="flex-1 min-h-0 p-2 md:p-6 grid grid-cols-1 md:grid-cols-[minmax(280px,1fr)_minmax(400px,2fr)_minmax(280px,1fr)] lg:grid-cols-[380px_1fr_380px] gap-2 md:gap-6 overflow-hidden h-full max-w-[1920px] mx-auto w-full z-10">
             
              {/* 1. Sources Panel */}
-             <aside class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl" x-bind:class="activeTab === 'sources' ? '!flex' : ''">
+             <aside class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl min-h-0" x-bind:class="activeTab === 'sources' ? '!flex' : ''">
                <SourcesPanel notebookId={props.notebookId} sources={props.sources} />
              </aside>
 
              {/* 2. Chat Panel */}
-             <section class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl" x-bind:class="activeTab === 'chat' ? '!flex' : ''">
-               <ChatPanel />
+             <section class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl min-h-0" x-bind:class="activeTab === 'chat' ? '!flex' : ''">
+               <ChatPanel notebookId={props.notebookId} title={props.title} sources={props.sources} />
              </section>
 
              {/* 3. Studio Panel */}
-             <aside class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl" x-bind:class="activeTab === 'studio' ? '!flex' : ''">
+             <aside class="hidden md:flex flex-col h-full bg-white/50 md:bg-transparent rounded-3xl min-h-0" x-bind:class="activeTab === 'studio' ? '!flex' : ''">
                <StudioPanel />
              </aside>
 

@@ -1,16 +1,24 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "../index";
-import { sources } from "../schema";
+import { sources, source_chunks } from "../schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const insertSourceSchema = createInsertSchema(sources);
 export const selectSourceSchema = createSelectSchema(sources);
+
 export type InsertSource = z.infer<typeof insertSourceSchema>;
 export type SelectSource = z.infer<typeof selectSourceSchema>;
+export type InsertSourceChunk = typeof source_chunks.$inferInsert;
+export type SelectSourceChunk = typeof source_chunks.$inferSelect;
 
 export async function createSource(data: InsertSource) {
   return db.insert(sources).values(data).returning();
+}
+
+export async function createSourceChunks(data: InsertSourceChunk[]) {
+  if (data.length === 0) return [];
+  return db.insert(source_chunks).values(data).returning();
 }
 
 export async function listSourcesByNotebook(notebookId: number): Promise<SelectSource[]> {

@@ -28,8 +28,6 @@ This project uses the following exact versions. Never suggest APIs, config patte
 | @iconify/tailwind4   | 1.2.3   | CSS-first plugin, `prefixes: lucide`                                               |
 | @iconify-json/lucide | 1.2.97  | Icon set prefix: `lucide`                                                          |
 | @hono/zod-validator  | 0.7.6   |                                                                                    |
-| pdf-parse            | 2.4.5   | **v2 — drops default export `pdf(buffer)`, MUST use `new PDFParse()` class API**   |
-| cheerio              | 1.2.0   | Use for HTML text extraction from URLs                                             |
 
 ## TypeScript
 
@@ -72,4 +70,3 @@ Before suggesting any code involving the packages below, verify the syntax again
 - **Alpine.js v3** — directive and magic-property syntax is strict (`x-data`, `x-on`/`@`, `x-bind`/`:`); never invent directives or Vue/React patterns.
 - **HTMX v2** — event name prefix changed; verify `hx-on:` syntax and removed attributes.
 - **Iconify @iconify/tailwind4** — icon class syntax is `iconify lucide--home`; never use bracket or colon icon syntax, and never use React Iconify imports.
-- **pdf-parse 2.4.5** — The v2 branch drops the legacy default export function (`pdf(buffer)`). You MUST use the class-based API: `import { PDFParse } from "pdf-parse"; const parser = new PDFParse({ data: buffer }); await parser.getText();`

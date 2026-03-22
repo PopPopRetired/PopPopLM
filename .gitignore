@@ -17,14 +17,10 @@ Thumbs.db
 
 # Local runtime state
 .mastra/
-local.db
-mastra.db
-mastra.db-shm
-mastra.db-wal
+local.db*
+mastra.db*
 .tmp-*.sqlite
-src/mastra/public/*.db
-src/mastra/public/*.db-shm
-src/mastra/public/*.db-wal
+src/mastra/public/*.db*
 
 # TypeScript incremental cache
 *.tsbuildinfo
