@@ -47,7 +47,7 @@ This project uses the following exact versions. Never suggest APIs, config patte
 - No raw SQL strings — always use the Drizzle ORM query builder.
 - Validate all external input with Zod v4 before it reaches business logic or the database.
 - Colocate test files with their source: `src/foo/bar.ts` → `src/foo/bar.test.ts`.
-- For the current scaffold, use: `src/index.tsx` → `src/index.test.ts` and `src/db/queries/users.ts` → `src/db/queries/users.test.ts`.
+- For the current scaffold, use: `src/index.tsx` → `src/index.test.ts`, `src/db/queries/notebooks.ts` → `src/db/queries/notebooks.test.ts`, and `src/lib/mastra-message-content.ts` → `src/lib/mastra-message-content.test.ts`.
 
 ## Test Execution Expectations
 

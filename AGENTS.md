@@ -53,7 +53,9 @@ PopPopLM/
       index.ts          ← drizzle client singleton
       schema.ts         ← all table definitions
       queries/          ← typed query helpers per domain
-    routes/             ← Hono route groups (one file per domain)
+    lib/                ← shared helpers and pure logic
+    types/              ← shared TS types
+    routes/             ← Hono route groups (one file per domain or `<name>/index.tsx`)
     mastra/
       index.ts          ← Mastra instance
       agents/           ← one file per agent
@@ -82,7 +84,7 @@ These rules are auto-applied by Antigravity via the skills in `.agents/skills/`:
 | `mastra`            | `src/mastra/**` — agent/tool/workflow patterns            |
 | `database`          | `src/db/**` — schema, queries, migrations                 |
 | `ui`                | `src/views/**`, `src/components/**`, `*.css` — UI layer   |
-| `ingestion`         | `src/routes/sources.tsx`, `src/db/queries/sources.ts` — Source parsing |
+| `ingestion`         | `src/lib/ingest-source-content.ts`, `src/routes/sources.tsx`, `src/db/queries/sources.ts` — Source parsing |
 
 ### Tier 2 — Per Feature (attach manually at session start)
 
@@ -160,7 +162,8 @@ Answer these five questions before starting any build session. Keep scope to one
 ### Where Tests Live
 
 - `src/index.tsx` -> `src/index.test.ts`
-- `src/db/queries/users.ts` -> `src/db/queries/users.test.ts`
+- `src/db/queries/notebooks.ts` -> `src/db/queries/notebooks.test.ts`
+- `src/lib/foo.ts` -> `src/lib/foo.test.ts`
 - For new domains, colocate tests with the source file they verify.
 
 | Test Type      | Approach                                                                       |

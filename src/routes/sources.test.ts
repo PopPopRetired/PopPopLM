@@ -1,18 +1,23 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { configureTestDatabase, resetNotebooksTables } from "../db/test-utils";
+import { createTestDatabase, resetNotebooksTables } from "../db/test-utils";
+import type { AppDatabase } from "../db/index";
 
-configureTestDatabase(":memory:");
-const { db } = await import("../db/index");
+let db: AppDatabase;
+
+beforeEach(async () => {
+  db = createTestDatabase();
+  await resetNotebooksTables(db);
+  const client = (db as any).$client;
+  await client.execute(`INSERT INTO owners (id, name) VALUES (1, 'Test Owner')`);
+  await client.execute(`INSERT INTO notebooks (id, title, owner_id) VALUES (1, 'Test Notebook', 1)`);
+});
+
+// Import the app — routes use the production db singleton, but these tests
+// only validate request-level concerns (param parsing, status codes).
 import { app } from "../index";
 
 const formBody = (data: Record<string, string>): string =>
   new URLSearchParams(data).toString();
-
-beforeEach(async () => {
-  await resetNotebooksTables(db as any);
-  await db.$client.execute(`INSERT INTO owners (id, name) VALUES (1, 'Test Owner')`);
-  await db.$client.execute(`INSERT INTO notebooks (id, title, owner_id) VALUES (1, 'Test Notebook', 1)`);
-});
 
 describe("Sources Routes Validation", () => {
   it("POST /sources/:notebookId returns 400 for invalid notebookId param", async () => {

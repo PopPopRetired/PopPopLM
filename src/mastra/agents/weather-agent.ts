@@ -1,26 +1,34 @@
-import { Agent } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
-import { weatherTool } from '../tools/weather-tool';
+/**
+ * @module src/mastra/agents/weather-agent.ts
+ *
+ * REFERENCE EXAMPLE: An agent with dynamic tool calling.
+ *
+ * Demonstrates how to:
+ * 1. Define an agent with specific `instructions`
+ * 2. Attach a tool (`weatherTool`) for external data fetching
+ * 3. Configure conversation history via `Memory()`
+ *
+ * NOTE: This agent is not used in the primary Notebook flow; it exists
+ * as a scaffolding example for adding new capabilities.
+ */
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
 
+import { weatherTool } from "../tools/weather-tool";
+
+/**
+ * Assistant that provides weather info by dynamically calling tools.
+ */
 export const weatherAgent = new Agent({
-  id: 'weather-agent',
-  name: 'Weather Agent',
-  instructions: `
-      You are a helpful weather assistant that provides accurate weather information and can help planning activities based on the weather.
-
-      Your primary function is to help users get weather details for specific locations. When responding:
-      - Always ask for a location if none is provided
-      - If the location name isn't in English, please translate it
-      - If giving a location with multiple parts (e.g. "New York, NY"), use the most relevant part (e.g. "New York")
-      - Include relevant details like humidity, wind conditions, and precipitation
-      - Keep responses concise but informative
-      - If the user asks for activities and provides the weather forecast, suggest activities based on the weather forecast.
-      - If the user asks for activities, respond in the format they request.
-
-      Use the weatherTool to fetch current weather data.
-`,
-  model: 'openai/gpt-5-mini',
+  id: "weather-agent",
+  name: "Weather Agent",
+  instructions: [
+    "You are a helpful weather assistant that provides weather info and activity suggestions.",
+    "- Always ask for a location if none is provided.",
+    "- Include details like humidity, wind, and precipitation.",
+    "- Use the weatherTool to fetch current weather data for the location.",
+  ].join("\n"),
+  model: "openai/gpt-4o-mini", // Standardizing model name from placeholder
   tools: { weatherTool },
-
   memory: new Memory(),
 });

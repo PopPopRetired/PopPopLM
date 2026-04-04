@@ -1,0 +1,308 @@
+bun test v1.3.10 (30e609e0)
+
+src/index.test.ts:
+mastra-cloud-observability-exporter disabled: MASTRA_CLOUD_ACCESS_TOKEN environment variable not set.
+(pass) index routes > renders the scaffold page [2134.14ms]
+
+src/lib/search-sources.test.ts:
+(pass) searchSources > handles empty embedding correctly (mocked)
+
+src/lib/notebook-welcome.test.ts:
+(pass) notebook-welcome > getWelcomePrompt includes context
+(pass) notebook-welcome > parseWelcomeAgentResponse exact match
+(pass) notebook-welcome > parseWelcomeAgentResponse falls back to defaults
+
+src/lib/ingest-source-content.test.ts:
+(pass) ingest-source-content > text ingestion defaults title and type [0.66ms]
+(pass) ingest-source-content > url ingestion with mock fetch extracts html body [7.23ms]
+
+src/lib/mastra-message-content.test.ts:
+(pass) mastra-message-content > plain string
+(pass) mastra-message-content > json string text
+(pass) mastra-message-content > json string content
+(pass) mastra-message-content > json array parts
+(pass) mastra-message-content > json array direct
+
+src/lib/notebook-sse-stream.test.ts:
+(pass) notebook-sse-stream > missing agent [0.70ms]
+
+src/db/schema.test.ts:
+(pass) Zod Schema Validation > Owners Table Schema > validates valid owner names [1.21ms]
+(pass) Zod Schema Validation > Owners Table Schema > rejects missing names [0.84ms]
+(pass) Zod Schema Validation > Notebooks Table Schema > validates complete notebook objects [0.17ms]
+(pass) Zod Schema Validation > Notebooks Table Schema > rejects notebooks without an ownerId linkage
+(pass) Zod Schema Validation > Sources Table Schema > validates valid text source insertions [1.61ms]
+(pass) Zod Schema Validation > Sources Table Schema > rejects sources without a required type
+
+src/routes/sources.test.ts:
+(pass) Sources Routes Validation > POST /sources/:notebookId returns 400 for invalid notebookId param [4.53ms]
+(pass) Sources Routes Validation > POST /sources/:notebookId returns 400 for invalid source type in form [1.97ms]
+(pass) Sources Routes Validation > DELETE /sources/:notebookId returns 400 for invalid ID
+(pass) Sources Routes Validation > PATCH /sources/:notebookId/:sourceId returns 400 for missing title
+
+src/routes/home.test.ts:
+(pass) home routes > getFormattedNotebooks formats correctly
+
+src/routes/notebooks.test.ts:
+(pass) Notebook Routes Memory & Chat > GET /notebooks/1/welcome handles history properly [3.92ms]
+(pass) Notebook Routes Memory & Chat > DELETE /notebooks/1/chat handles memory deletion [1.97ms]
+
+src/db/queries/sources.test.ts:
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: My Notes,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "My Notes", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) sources query helpers > creates, lists, and deletes sources [4.11ms]
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: My Notes,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "My Notes", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) sources query helpers > updates source title [2.05ms]
+
+src/db/queries/notebooks.test.ts:
+20 |     await createOwner({ name: "PopPop" });
+21 |     await createOwner({ name: "MawMaw" });
+22 | 
+23 |     const owners = await listOwners();
+24 | 
+25 |     expect(owners).toHaveLength(2);
+                        ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 0
+
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/src/db/queries/notebooks.test.ts:25:20)
+(fail) notebooks query helpers > creates and lists owners [1.42ms]
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: Technology,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "Technology", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) notebooks query helpers > creates notebooks for a specific owner [2.34ms]
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: Recipes,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "Recipes", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) notebooks query helpers > adds sources to notebooks and lists correctly with source count [2.24ms]
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: PopPop's Math Notes,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "PopPop's Math Notes", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) notebooks query helpers > filters notebooks by ownerId [1.29ms]
+38 |   async queryWithCache(queryString, params, query) {
+39 |     if (this.cache === void 0 || is(this.cache, NoopCache) || this.queryMetadata === void 0) {
+40 |       try {
+41 |         return await query();
+42 |       } catch (e) {
+43 |         throw new DrizzleQueryError(queryString, params, e);
+                   ^
+error: Failed query: insert into "notebooks" ("id", "title", "owner_id") values (null, ?, ?) returning "id", "title", "owner_id"
+params: Science,1
+  query: "insert into \"notebooks\" (\"id\", \"title\", \"owner_id\") values (null, ?, ?) returning \"id\", \"title\", \"owner_id\"",
+ params: [
+  "Science", 1
+],
+
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:43:15)
+
+429 | }
+430 | function mapSqliteError(e) {
+431 |     if (e instanceof Database.SqliteError) {
+432 |         const extendedCode = e.code;
+433 |         const code = mapToBaseCode(e.rawCode);
+434 |         return new LibsqlError(e.message, code, extendedCode, e.rawCode, e);
+                     ^
+LibsqlError: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed
+ extendedCode: "SQLITE_CONSTRAINT_FOREIGNKEY",
+    rawCode: 787,
+       code: "SQLITE_CONSTRAINT"
+
+      at mapSqliteError (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:434:16)
+      at executeStmt (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:337:15)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/@libsql/client/lib-esm/sqlite3.js:82:16)
+      at <anonymous> (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:195:61)
+      at queryWithCache (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/session.js:41:22)
+      at values (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:193:23)
+      at all (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/libsql/session.js:136:29)
+      at execute (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/sqlite-core/query-builders/insert.js:174:41)
+      at then (/Users/jamesmoran/Documents/AI/poppoplm/node_modules/drizzle-orm/query-promise.js:21:17)
+(fail) notebooks query helpers > finds a notebook by its id [1.64ms]
+
+7 tests failed:
+(fail) sources query helpers > creates, lists, and deletes sources [4.11ms]
+(fail) sources query helpers > updates source title [2.05ms]
+(fail) notebooks query helpers > creates and lists owners [1.42ms]
+(fail) notebooks query helpers > creates notebooks for a specific owner [2.34ms]
+(fail) notebooks query helpers > adds sources to notebooks and lists correctly with source count [2.24ms]
+(fail) notebooks query helpers > filters notebooks by ownerId [1.29ms]
+(fail) notebooks query helpers > finds a notebook by its id [1.64ms]
+
+ 26 pass
+ 7 fail
+ 50 expect() calls
+Ran 33 tests across 12 files. [2.31s]

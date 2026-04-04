@@ -5,6 +5,10 @@ description: Rules for extracting text from HTML, PDFs, and YouTube videos. Auto
 
 # Ingestion Rules
 
+## Where Code Lives
+- **Extraction logic**: `src/lib/ingest-source-content.ts` (tested by `src/lib/ingest-source-content.test.ts`)
+- **HTTP and Chunking**: `src/routes/sources.tsx`
+
 ## Package Constraints
 
 | Package              | Version | Notes                                                                              |

@@ -1,221 +1,229 @@
-import { Hono } from "hono";
-import type { AppEnv } from "../types";
-import { z } from "zod";
+/**
+ * @module src/routes/sources.tsx
+ *
+ * Handles source lifecycle: ingestion, chunking, embedding, and deletion.
+ *
+ * This route is the entry point for all information added to a notebook.
+ * It coordinates text extraction (from URLs, PDFs, or raw text), splits it
+ * into chunks, generates vector embeddings for each chunk, and persists
+ * everything to the database.
+ */
 import { zValidator } from "@hono/zod-validator";
-import { createSource, createSourceChunks, deleteSources, listSourcesByNotebook, updateSourceTitle } from "../db/queries/sources";
-import { chunkText, generateEmbedding } from "../lib/chunking";
+import { type Context, Hono } from "hono";
+import { z } from "zod";
+
 import { SourcesPanel } from "../components/SourcesPanel";
-import * as cheerio from "cheerio";
-import { PDFParse } from "pdf-parse";
-import { YoutubeTranscript } from "youtube-transcript";
+import {
+  createSource,
+  createSourceChunks,
+  deleteSources,
+  listSourcesByNotebook,
+  updateSourceTitle,
+} from "../db/queries/sources";
+import { chunkText, generateEmbedding } from "../lib/chunking";
+import { extractContentFromUploadSource } from "../lib/ingest-source-content";
+import type { AppEnv } from "../types";
 
 const sourcesRoutes = new Hono<AppEnv>();
 
+/** Schema for the source ingestion form. */
 const uploadSourceFormSchema = z.object({
+  /** Input type provided by the user. */
   type: z.enum(["text", "url", "pdf"]).optional().default("text"),
+  /** User-supplied title (optional fallback). */
   title: z.string().optional(),
+  /** Raw text or URL string. */
   content: z.string().optional(),
+  /** Uploaded PDF file (required if type is 'pdf'). */
   file: z.instanceof(File).optional(),
 });
 
+/**
+ * Internal helper: Splits text into chunks, generates embeddings, and saves to DB.
+ *
+ * Processes chunks sequentially to avoid overwhelming the local embedding
+ * pipeline (especially if running on CPU).
+ *
+ * @param content  - Normalized text content to process.
+ * @param sourceId - Parent source ID for these chunks.
+ */
+async function chunkAndEmbedContent(content: string, sourceId: number) {
+  if (!content || content.trim() === "") return;
+
+  const chunks = chunkText(content);
+  const chunksToInsert = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const textChunk = chunks[i];
+    const embedding = await generateEmbedding(textChunk);
+
+    if (embedding && embedding.length > 0) {
+      chunksToInsert.push({
+        sourceId,
+        content: textChunk,
+        chunkIndex: i,
+        embedding: embedding,
+      });
+    }
+  }
+
+  if (chunksToInsert.length > 0) {
+    await createSourceChunks(chunksToInsert);
+  }
+}
+
+/**
+ * Internal helper: Extracts source IDs from an HTMX DELETE request.
+ *
+ * Handles IDs arriving via query parameters (default) or multi-part
+ * form bodies (depending on HTMX configuration).
+ *
+ * @param c - Hono request context.
+ * @returns Array of numeric IDs to delete.
+ */
+async function parseSourceIdsFromRequest(c: Context): Promise<number[]> {
+  let sourceIdsRaw = c.req.queries("sourceIds");
+
+  // Fallback to parsing body if query params are empty
+  if (!sourceIdsRaw || sourceIdsRaw.length === 0) {
+    try {
+      const body = await c.req.parseBody({ all: true });
+      const bodyIds = body.sourceIds;
+      if (Array.isArray(bodyIds)) {
+        sourceIdsRaw = bodyIds as string[];
+      } else if (typeof bodyIds === "string") {
+        sourceIdsRaw = [bodyIds];
+      }
+    } catch {
+      /* ignore empty bodies */
+    }
+  }
+
+  if (!sourceIdsRaw) return [];
+
+  return sourceIdsRaw
+    .map((id) => parseInt(id, 10))
+    .filter((id) => !isNaN(id));
+}
+
+/**
+ * POST /:notebookId
+ * Ingests a new source, handles embedding pipeline, and returns updated panel.
+ */
 sourcesRoutes.post(
   "/:notebookId",
-  zValidator("param", z.object({ notebookId: z.coerce.number().int().positive() }), (result, c) => {
-    if (!result.success) return c.text("Invalid notebook", 400);
-  }),
+  zValidator(
+    "param",
+    z.object({ notebookId: z.coerce.number().int().positive() }),
+    (result, c) => {
+      if (!result.success) return c.text("Invalid notebook", 400);
+    },
+  ),
   zValidator("form", uploadSourceFormSchema, (result, c) => {
-    if (!result.success) return c.text(result.error.issues[0]?.message || "Invalid form values", 400);
+    if (!result.success)
+      return c.text(
+        result.error.issues[0]?.message || "Invalid form values",
+        400,
+      );
   }),
   async (c) => {
     const { notebookId } = c.req.valid("param");
     const body = c.req.valid("form");
 
-    let type = body.type;
-    let title = typeof body.title === "string" && body.title.trim() !== "" ? body.title : "Untitled";
-    let content = "";
+    // 1. Extract content based on type (URL fetch, PDF parse, etc.)
+    const extracted = await extractContentFromUploadSource(
+      body.type ?? "text",
+      typeof body.content === "string" ? body.content : "",
+      body.file instanceof File ? body.file : undefined,
+      typeof body.title === "string" ? body.title : undefined,
+    );
 
-    if (type === "pdf" && body.file instanceof File) {
-      const arrayBuffer = await body.file.arrayBuffer();
-      
-      try {
-        const parser = new PDFParse({ data: Buffer.from(arrayBuffer) });
-        const textResult = await parser.getText();
-        content = textResult.text.trim();
-      } catch (e) {
-        console.error("Failed to parse PDF", e);
-        content = "Could not extract text from PDF";
-      }
-
-      if (title === "Untitled") {
-        title = body.file.name;
-      }
-    } else if (type === "url" || type === "text") {
-      const rawContent = typeof body.content === "string" ? body.content.trim() : "";
-      content = rawContent;
-      
-      if (type === "text" && (content.startsWith("http://") || content.startsWith("https://"))) {
-        type = "url";
-      }
-
-      if (type === "url") {
-        try {
-          // If the rawContent is not a full URL, we might want to ensure it has http:// or https://
-          let fetchUrl = rawContent;
-          if (!fetchUrl.startsWith("http")) {
-            fetchUrl = "https://" + fetchUrl;
-          }
-
-          const isYouTube = fetchUrl.includes("youtube.com/watch") || fetchUrl.includes("youtu.be/");
-          let youtubeText = "";
-
-          if (isYouTube) {
-            try {
-              const transcript = await YoutubeTranscript.fetchTranscript(fetchUrl);
-              youtubeText = transcript.map((t) => t.text).join(" ");
-            } catch (e) {
-              console.error("Failed to fetch YouTube transcript", e);
-            }
-          }
-
-          const res = await fetch(fetchUrl);
-          if (res.ok) {
-            const html = await res.text();
-            const $ = cheerio.load(html);
-            
-            // Extract the title if not provided
-            if (title === "Untitled" || title.trim() === "") {
-              const urlTitle = $("title").text().trim();
-              if (urlTitle) {
-                title = urlTitle;
-              }
-            }
-            
-            if (isYouTube && youtubeText) {
-              content = youtubeText;
-            } else {
-              // remove non-content elements
-              $("script, style, noscript, nav, header, footer, iframe").remove();
-              const extractedText = $("body").text().replace(/\s+/g, ' ').trim();
-              content = extractedText || rawContent; // store the extracted text in content
-            }
-          } else if (isYouTube && youtubeText) {
-            content = youtubeText;
-          }
-        } catch (e) {
-          console.error("Failed to fetch/parse URL", e);
-          // Keep content as rawContent if fetch fails
-        }
-      }
-
-      if (title === "Untitled" || title.trim() === "") {
-        if (type === "url") {
-          title = rawContent;
-        } else {
-          title = rawContent.length > 40 ? rawContent.slice(0, 37) + "..." : (rawContent || "Untitled Text");
-        }
-      }
-    }
-
+    // 2. Create the source record
     const [insertedSource] = await createSource({
       notebookId,
-      title,
-      type,
-      content,
+      title: extracted.extractedTitle,
+      type: extracted.extractedType,
+      content: extracted.extractedContent,
       createdAt: new Date(),
     });
 
-    if (content && content.trim() !== "") {
-      const chunks = chunkText(content);
-      const chunksToInsert = [];
-      
-      // Process sequentially to avoid instantly overwhelming a local GPT4All instance
-      for (let i = 0; i < chunks.length; i++) {
-        const textChunk = chunks[i];
-        const embedding = await generateEmbedding(textChunk);
-        if (embedding && embedding.length > 0) {
-          chunksToInsert.push({
-            sourceId: insertedSource.id,
-            content: textChunk,
-            chunkIndex: i,
-            embedding: embedding
-          });
-        }
-      }
-      
-      if (chunksToInsert.length > 0) {
-        await createSourceChunks(chunksToInsert);
-      }
-    }
+    // 3. Kick off embedding pipeline
+    await chunkAndEmbedContent(extracted.extractedContent, insertedSource.id);
 
+    // 4. Return updated sources list view
     const sourcesList = await listSourcesByNotebook(notebookId);
-    return c.html(<SourcesPanel notebookId={notebookId} sources={sourcesList} />);
-  }
+    return c.html(
+      <SourcesPanel notebookId={notebookId} sources={sourcesList} />,
+    );
+  },
 );
 
+/**
+ * DELETE /:notebookId
+ * Deletes multiple sources and returns updated panel.
+ */
 sourcesRoutes.delete(
   "/:notebookId",
-  zValidator("param", z.object({ notebookId: z.coerce.number().int().positive() }), (result, c) => {
-    if (!result.success) return c.text("Invalid notebook", 400);
-  }),
+  zValidator(
+    "param",
+    z.object({ notebookId: z.coerce.number().int().positive() }),
+    (result, c) => {
+      if (!result.success) return c.text("Invalid notebook", 400);
+    },
+  ),
   async (c) => {
     const { notebookId } = c.req.valid("param");
-    
-    // HTMX hx-delete sends form data as query parameters by default, but sometimes as body
-    let sourceIdsRaw = c.req.queries("sourceIds");
-    
-    if (!sourceIdsRaw || sourceIdsRaw.length === 0) {
-      try {
-        const body = await c.req.parseBody({ all: true });
-        const bodyIds = body.sourceIds;
-        if (Array.isArray(bodyIds)) {
-          sourceIdsRaw = bodyIds as string[];
-        } else if (typeof bodyIds === "string") {
-          sourceIdsRaw = [bodyIds];
-        }
-      } catch (e) {
-        // ignore parse body errors if empty
-      }
-    }
-    
-    const idsToDelete: number[] = [];
-    
-    if (Array.isArray(sourceIdsRaw)) {
-      for (const idStr of sourceIdsRaw) {
-        if (typeof idStr === "string") idsToDelete.push(parseInt(idStr, 10));
-      }
-    } else if (typeof sourceIdsRaw === "string") {
-      idsToDelete.push(parseInt(sourceIdsRaw, 10));
-    }
+    const idsToDelete = await parseSourceIdsFromRequest(c);
 
     if (idsToDelete.length > 0) {
       await deleteSources(idsToDelete);
     }
 
     const sourcesList = await listSourcesByNotebook(notebookId);
-    return c.html(<SourcesPanel notebookId={notebookId} sources={sourcesList} />);
-  }
+    return c.html(
+      <SourcesPanel notebookId={notebookId} sources={sourcesList} />,
+    );
+  },
 );
 
+/**
+ * GET /:notebookId/panel
+ * Fragment: Returns the current sources list for a notebook.
+ */
 sourcesRoutes.get(
   "/:notebookId/panel",
-  zValidator("param", z.object({ notebookId: z.coerce.number().int().positive() }), (result, c) => {
-    if (!result.success) return c.text("Invalid notebook", 400);
-  }),
+  zValidator(
+    "param",
+    z.object({ notebookId: z.coerce.number().int().positive() }),
+    (result, c) => {
+      if (!result.success) return c.text("Invalid notebook", 400);
+    },
+  ),
   async (c) => {
     const { notebookId } = c.req.valid("param");
     const sourcesList = await listSourcesByNotebook(notebookId);
-    return c.html(<SourcesPanel notebookId={notebookId} sources={sourcesList} />);
-  }
+    return c.html(
+      <SourcesPanel notebookId={notebookId} sources={sourcesList} />,
+    );
+  },
 );
 
+/**
+ * PATCH /:notebookId/:sourceId
+ * Updates a source title and returns updated panel.
+ */
 sourcesRoutes.patch(
   "/:notebookId/:sourceId",
-  zValidator("param", z.object({
-    notebookId: z.coerce.number().int().positive(),
-    sourceId: z.coerce.number().int().positive()
-  }), (result, c) => {
-    if (!result.success) return c.text("Invalid ID", 400);
-  }),
+  zValidator(
+    "param",
+    z.object({
+      notebookId: z.coerce.number().int().positive(),
+      sourceId: z.coerce.number().int().positive(),
+    }),
+    (result, c) => {
+      if (!result.success) return c.text("Invalid ID", 400);
+    },
+  ),
   zValidator("form", z.object({ title: z.string().trim() }), (result, c) => {
     if (!result.success) return c.text("Invalid title", 400);
   }),
@@ -228,8 +236,10 @@ sourcesRoutes.patch(
     }
 
     const sourcesList = await listSourcesByNotebook(notebookId);
-    return c.html(<SourcesPanel notebookId={notebookId} sources={sourcesList} />);
-  }
+    return c.html(
+      <SourcesPanel notebookId={notebookId} sources={sourcesList} />,
+    );
+  },
 );
 
 export { sourcesRoutes };

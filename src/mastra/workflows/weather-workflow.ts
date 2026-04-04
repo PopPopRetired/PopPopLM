@@ -1,6 +1,20 @@
-import { createStep, createWorkflow } from '@mastra/core/workflows';
-import { z } from 'zod';
+/**
+ * @module src/mastra/workflows/weather-workflow.ts
+ *
+ * REFERENCE EXAMPLE: A Mastra workflow with chained steps.
+ *
+ * Demonstrates:
+ * 1. Defining a multi-step pipeline using `createWorkflow` and `.then()`
+ * 2. Pass data between steps (forecast data from step 1 to step 2)
+ * 3. Incorporating an agent with streaming response within a workflow step
+ *
+ * NOTE: This workflow is a scaffolding example and is not called from
+ * the primary application routes.
+ */
+import { createStep, createWorkflow } from "@mastra/core/workflows";
+import { z } from "zod";
 
+/** Schema for the forecast data passed between workflow steps. */
 const forecastSchema = z.object({
   date: z.string(),
   maxTemp: z.number(),
@@ -10,41 +24,45 @@ const forecastSchema = z.object({
   location: z.string(),
 });
 
+/** Translates WMO codes specifically for the workflow steps. */
 function getWeatherCondition(code: number): string {
   const conditions: Record<number, string> = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Foggy',
-    48: 'Depositing rime fog',
-    51: 'Light drizzle',
-    53: 'Moderate drizzle',
-    55: 'Dense drizzle',
-    61: 'Slight rain',
-    63: 'Moderate rain',
-    65: 'Heavy rain',
-    71: 'Slight snow fall',
-    73: 'Moderate snow fall',
-    75: 'Heavy snow fall',
-    95: 'Thunderstorm',
+    0: "Clear sky",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Foggy",
+    48: "Depositing rime fog",
+    51: "Light drizzle",
+    53: "Moderate drizzle",
+    55: "Dense drizzle",
+    61: "Slight rain",
+    63: "Moderate rain",
+    65: "Heavy rain",
+    71: "Slight snow fall",
+    73: "Moderate snow fall",
+    75: "Heavy snow fall",
+    95: "Thunderstorm",
   };
-  return conditions[code] || 'Unknown';
+  return conditions[code] || "Unknown";
 }
 
+/**
+ * Step 1: Fetches numerical weather data from external API.
+ */
 const fetchWeather = createStep({
-  id: 'fetch-weather',
-  description: 'Fetches weather forecast for a given city',
+  id: "fetch-weather",
+  description: "Fetches weather forecast for a given city",
   inputSchema: z.object({
-    city: z.string().describe('The city to get the weather for'),
+    city: z.string().describe("The city to get the weather for"),
   }),
   outputSchema: forecastSchema,
   execute: async ({ inputData }) => {
-    if (!inputData) {
-      throw new Error('Input data not found');
-    }
+    if (!inputData) throw new Error("Input data not found");
 
-    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inputData.city)}&count=1`;
+    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+      inputData.city,
+    )}&count=1`;
     const geocodingResponse = await fetch(geocodingUrl);
     const geocodingData = (await geocodingResponse.json()) as {
       results: { latitude: number; longitude: number; name: string }[];
@@ -59,18 +77,11 @@ const fetchWeather = createStep({
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=precipitation,weathercode&timezone=auto,&hourly=precipitation_probability,temperature_2m`;
     const response = await fetch(weatherUrl);
     const data = (await response.json()) as {
-      current: {
-        time: string;
-        precipitation: number;
-        weathercode: number;
-      };
-      hourly: {
-        precipitation_probability: number[];
-        temperature_2m: number[];
-      };
+      current: { time: string; precipitation: number; weathercode: number };
+      hourly: { precipitation_probability: number[]; temperature_2m: number[] };
     };
 
-    const forecast = {
+    return {
       date: new Date().toISOString(),
       maxTemp: Math.max(...data.hourly.temperature_2m),
       minTemp: Math.min(...data.hourly.temperature_2m),
@@ -81,96 +92,57 @@ const fetchWeather = createStep({
       ),
       location: name,
     };
-
-    return forecast;
   },
 });
 
+/**
+ * Step 2: Uses the weather agent to plan activities based on fetched data.
+ */
 const planActivities = createStep({
-  id: 'plan-activities',
-  description: 'Suggests activities based on weather conditions',
+  id: "plan-activities",
+  description: "Suggests activities based on weather conditions",
   inputSchema: forecastSchema,
   outputSchema: z.object({
     activities: z.string(),
   }),
   execute: async ({ inputData, mastra }) => {
     const forecast = inputData;
+    if (!forecast) throw new Error("Forecast data not found");
 
-    if (!forecast) {
-      throw new Error('Forecast data not found');
-    }
+    const agent = mastra?.getAgent("weatherAgent");
+    if (!agent) throw new Error("Weather agent not found");
 
-    const agent = mastra?.getAgent('weatherAgent');
-    if (!agent) {
-      throw new Error('Weather agent not found');
-    }
+    const prompt = [
+      `Based on the following weather forecast for ${forecast.location}, suggest appropriate activities:`,
+      JSON.stringify(forecast, null, 2),
+      "For each day in the forecast, structure your response exactly as follows:",
+      "📅 [Date]",
+      "🌡️ WEATHER SUMMARY",
+      "• Conditions: [desc]",
+      "🌅 MORNING ACTIVITIES",
+      "🌞 AFTERNOON ACTIVITIES",
+      "🏠 INDOOR ALTERNATIVES",
+      "Guidelines: Include specific venues, TRAILS, or locations.",
+    ].join("\n");
 
-    const prompt = `Based on the following weather forecast for ${forecast.location}, suggest appropriate activities:
-      ${JSON.stringify(forecast, null, 2)}
-      For each day in the forecast, structure your response exactly as follows:
-
-      📅 [Day, Month Date, Year]
-      ═══════════════════════════
-
-      🌡️ WEATHER SUMMARY
-      • Conditions: [brief description]
-      • Temperature: [X°C/Y°F to A°C/B°F]
-      • Precipitation: [X% chance]
-
-      🌅 MORNING ACTIVITIES
-      Outdoor:
-      • [Activity Name] - [Brief description including specific location/route]
-        Best timing: [specific time range]
-        Note: [relevant weather consideration]
-
-      🌞 AFTERNOON ACTIVITIES
-      Outdoor:
-      • [Activity Name] - [Brief description including specific location/route]
-        Best timing: [specific time range]
-        Note: [relevant weather consideration]
-
-      🏠 INDOOR ALTERNATIVES
-      • [Activity Name] - [Brief description including specific venue]
-        Ideal for: [weather condition that would trigger this alternative]
-
-      ⚠️ SPECIAL CONSIDERATIONS
-      • [Any relevant weather warnings, UV index, wind conditions, etc.]
-
-      Guidelines:
-      - Suggest 2-3 time-specific outdoor activities per day
-      - Include 1-2 indoor backup options
-      - For precipitation >50%, lead with indoor activities
-      - All activities must be specific to the location
-      - Include specific venues, trails, or locations
-      - Consider activity intensity based on temperature
-      - Keep descriptions concise but informative
-
-      Maintain this exact formatting for consistency, using the emoji and section headers as shown.`;
-
-    const response = await agent.stream([
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ]);
-
-    let activitiesText = '';
+    const response = await agent.stream([{ role: "user", content: prompt }]);
+    let activitiesText = "";
 
     for await (const chunk of response.textStream) {
-      process.stdout.write(chunk);
       activitiesText += chunk;
     }
 
-    return {
-      activities: activitiesText,
-    };
+    return { activities: activitiesText };
   },
 });
 
+/**
+ * Defined workflow: coordinates weather fetching and activity planning.
+ */
 const weatherWorkflow = createWorkflow({
-  id: 'weather-workflow',
+  id: "weather-workflow",
   inputSchema: z.object({
-    city: z.string().describe('The city to get the weather for'),
+    city: z.string().describe("The city to get the weather for"),
   }),
   outputSchema: z.object({
     activities: z.string(),
